@@ -41,7 +41,7 @@ jobs:
       - name: Build
         run: cmake --build build -j 2
       - name: Integration tests (SQLite + live PostgreSQL)
-        run: ctest --test-dir build --output-on-failure --output-junit build/ctest-results.xml
+        run: ctest --test-dir build --output-on-failure --output-junit ctest-results.xml
       - name: Confirm all PostgreSQL tests actually executed
         run: |
           python3 - <<'PYTEST'
