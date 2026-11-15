@@ -1,0 +1,9 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+find_dependency(liteorm_cpp CONFIG)
+if(NOT TARGET tinyorm::tinyorm)
+    add_library(tinyorm::tinyorm INTERFACE IMPORTED)
+    set_target_properties(tinyorm::tinyorm PROPERTIES
+        INTERFACE_LINK_LIBRARIES liteorm::liteorm)
+endif()
+check_required_components(tinyorm_cpp11)

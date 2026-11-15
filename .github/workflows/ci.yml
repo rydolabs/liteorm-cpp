@@ -1,0 +1,87 @@
+name: C++11 SQLite + PostgreSQL
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  integration:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [g++, clang++]
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: tinyorm
+          POSTGRES_PASSWORD: tinyorm
+          POSTGRES_DB: tinyorm_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tinyorm -d tinyorm_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      LITEORM_REQUIRE_PG: "1"
+      LITEORM_TEST_PG_DSN: "host=127.0.0.1 port=5432 user=tinyorm password=tinyorm dbname=tinyorm_test connect_timeout=5"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake libsqlite3-dev libpq-dev
+      - name: Configure
+        run: >-
+          cmake -S . -B build -DLITEORM_WITH_POSTGRESQL=ON
+          -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
+          -DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_STANDARD_REQUIRED=ON
+          -DCMAKE_CXX_EXTENSIONS=OFF
+          -DCMAKE_CXX_FLAGS='-Wall -Wextra -Werror -pedantic'
+      - name: Build
+        run: cmake --build build -j 2
+      - name: Integration tests (SQLite + live PostgreSQL)
+        run: ctest --test-dir build --output-on-failure --output-junit build/ctest-results.xml
+      - name: Confirm all PostgreSQL tests actually executed
+        run: |
+          python3 - <<'PYTEST'
+          import xml.etree.ElementTree as ET
+          root = ET.parse('build/ctest-results.xml').getroot()
+          tests = [e for e in root.iter('testcase')
+                   if e.attrib.get('name', '').startswith('postgresql_')]
+          if len(tests) != 5:
+              raise SystemExit('Expected 5 PostgreSQL test cases; found %d' % len(tests))
+          skipped = [e.attrib['name'] for e in tests if e.find('skipped') is not None]
+          if skipped:
+              raise SystemExit('PostgreSQL tests skipped: ' + ', '.join(skipped))
+          print('All %d PostgreSQL integration tests executed.' % len(tests))
+          PYTEST
+      - name: CMake install and external consumer smoke test
+        run: |
+          cmake --install build --prefix "$PWD/stage"
+          cmake -S tests/consumer -B consumer-build -DCMAKE_PREFIX_PATH="$PWD/stage"
+          cmake --build consumer-build -j 2
+          ./consumer-build/liteorm_installed_consumer
+
+  sqlite-only:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SQLite development files
+        run: sudo apt-get update && sudo apt-get install -y cmake libsqlite3-dev
+      - name: Configure without PostgreSQL
+        run: >-
+          cmake -S . -B build-sqlite -DLITEORM_WITH_POSTGRESQL=OFF
+          -DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_STANDARD_REQUIRED=ON
+          -DCMAKE_CXX_EXTENSIONS=OFF
+          -DCMAKE_CXX_FLAGS='-Wall -Wextra -Werror -pedantic'
+      - name: Build and test
+        run: |
+          cmake --build build-sqlite -j 2
+          ctest --test-dir build-sqlite --output-on-failure
+      - name: Install and consume SQLite-only build
+        run: |
+          cmake --install build-sqlite --prefix "$PWD/stage-sqlite"
+          cmake -S tests/consumer -B consumer-sqlite -DCMAKE_PREFIX_PATH="$PWD/stage-sqlite"
+          cmake --build consumer-sqlite -j 2
+          ./consumer-sqlite/liteorm_installed_consumer
