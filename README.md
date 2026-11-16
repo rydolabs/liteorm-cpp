@@ -24,6 +24,31 @@ users.remove(alice.id);
 Define User as a regular struct; no custom Table subclass or hand-written SQL is required.
 See [Object API guide](OBJECT_API.ko.md) and [Repository demo](examples/repository_main.cpp).
 
+## Database connections and runnable examples
+
+Only Database construction differs between the two backends; the Repository API is identical.
+
+**SQLite:**
+
+```cpp
+liteorm::Database db("app.db");     // Persistent database file
+// liteorm::Database db(":memory:"); // In-memory database
+```
+
+**PostgreSQL:**
+
+```cpp
+const char* dsn = std::getenv("LITEORM_PG_DSN");
+if (!dsn || !*dsn) throw std::runtime_error("LITEORM_PG_DSN not set");
+liteorm::Database db(dsn, liteorm::BackendKind::PostgreSQL);
+```
+
+Runnable C++11 examples: [SQLite](examples/sqlite_object_main.cpp) and
+[PostgreSQL](examples/postgresql_object_main.cpp).
+
+Build and run them with the instructions in
+[the SQLite/PostgreSQL guide (Korean)](DATABASE_CONNECTIONS.ko.md).
+
 ## Features
 
 - C++11 API using typed `Table<T>` / `Column<T, Field>` model metadata.

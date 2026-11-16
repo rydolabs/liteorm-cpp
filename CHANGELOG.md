@@ -1,5 +1,7 @@
 # v0.8 — Object-first Repository API
 
+- Added runnable SQLite and PostgreSQL Repository examples, a connection guide, and CI smoke runs.
+
 - Added model<T>() and repository<T>() for simple object CRUD.
 - Added typed col(&T::field) predicates and chained queries.
 - Generated integer primary keys are copied back into inserted objects.

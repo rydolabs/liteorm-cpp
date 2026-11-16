@@ -88,6 +88,8 @@ install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/tinyorm_cpp11ConfigVersion.cmake"
     DESTINATION "${TINYORM_INSTALL_CMAKEDIR}")
 
+add_executable(liteorm_sqlite_object_example examples/sqlite_object_main.cpp)
+target_link_libraries(liteorm_sqlite_object_example PRIVATE liteorm)
 add_executable(liteorm_repository_demo examples/repository_main.cpp)
 target_link_libraries(liteorm_repository_demo PRIVATE liteorm)
 add_executable(liteorm_demo examples/main.cpp)
@@ -118,6 +120,8 @@ add_executable(liteorm_relation_tests tests/test_relations.cpp)
 target_link_libraries(liteorm_relation_tests PRIVATE liteorm)
 
 if(LITEORM_WITH_POSTGRESQL)
+    add_executable(liteorm_postgresql_object_example examples/postgresql_object_main.cpp)
+    target_link_libraries(liteorm_postgresql_object_example PRIVATE liteorm)
     add_executable(liteorm_pg_demo examples/postgresql_main.cpp)
     target_link_libraries(liteorm_pg_demo PRIVATE liteorm)
     add_executable(liteorm_postgresql_tests tests/test_postgresql.cpp)
