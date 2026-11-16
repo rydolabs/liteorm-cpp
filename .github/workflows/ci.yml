@@ -49,8 +49,8 @@ jobs:
           root = ET.parse('build/ctest-results.xml').getroot()
           tests = [e for e in root.iter('testcase')
                    if e.attrib.get('name', '').startswith('postgresql_')]
-          if len(tests) != 5:
-              raise SystemExit('Expected 5 PostgreSQL test cases; found %d' % len(tests))
+          if len(tests) != 6:
+              raise SystemExit('Expected 6 PostgreSQL test cases; found %d' % len(tests))
           skipped = [e.attrib['name'] for e in tests if e.find('skipped') is not None]
           if skipped:
               raise SystemExit('PostgreSQL tests skipped: ' + ', '.join(skipped))

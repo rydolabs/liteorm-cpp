@@ -1,3 +1,14 @@
+# v0.8 — Object-first Repository API
+
+- Added model<T>() and repository<T>() for simple object CRUD.
+- Added typed col(&T::field) predicates and chained queries.
+- Generated integer primary keys are copied back into inserted objects.
+- Preserved legacy Table/Column/SQL APIs and C++11 compatibility.
+- Added SQLite and PostgreSQL 17 repository integration coverage and demo.
+- No pool, change tracking, automatic schema diff, or asynchronous API.
+
+---
+
 # v0.7-core — 기본 CRUD 호환성·문서·회귀 테스트 강화
 
 - 프로젝트명 **LiteORM-cpp** 유지; CMake 패키지 버전을 **0.7.0**으로 갱신. C++11 유지.

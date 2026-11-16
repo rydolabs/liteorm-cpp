@@ -4,6 +4,7 @@
 #include "liteorm/core.hpp"
 #include <map>
 #include <memory>
+#include <typeindex>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -65,6 +66,10 @@ private:
     bool active_;
 };
 
+template <typename Model> class ModelBuilder;
+template <typename Model> class Repository;
+template <typename Model> class RepositoryQuery;
+template <typename Model> class Predicate;
 template <typename Model> class BoundSelect;
 template <typename Model> class BoundUpdate;
 template <typename Model> class BoundDelete;
@@ -151,6 +156,11 @@ public:
     }
 
     template <typename Model>
+    ModelBuilder<Model> model(const std::string& table_name);
+    template <typename Model>
+    Repository<Model> repository();
+
+    template <typename Model>
     BoundSelect<Model> select(const Table<Model>& table);
     template <typename Model>
     BoundUpdate<Model> update(const Table<Model>& table);
@@ -183,6 +193,7 @@ private:
     friend class Statement;
     friend class Transaction;
     std::unique_ptr<detail::Backend> driver_;
+    std::map<std::type_index, std::shared_ptr<void> > models_;
 };
 
 template <typename Model>
@@ -539,4 +550,6 @@ template <typename Model>
 BoundDelete<Model> Database::remove(const Table<Model>& t) { return BoundDelete<Model>(*this, t); }
 
 } // namespace liteorm
+
+#include "liteorm/repository.hpp"
 #endif

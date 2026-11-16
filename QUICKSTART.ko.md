@@ -1,4 +1,4 @@
-# LiteORM-cpp C++11 빠른 시작 (v0.7-core)
+# LiteORM-cpp C++11 빠른 시작 (v0.8)
 
 C++11, SQLite3을 필수로 사용합니다. PostgreSQL은 `-DLITEORM_WITH_POSTGRESQL=ON`으로 libpq 드라이버를 포함합니다. DB 연결 풀/Change Tracking은 없습니다.
 
@@ -13,7 +13,12 @@ ctest --test-dir build --output-on-failure
 
 PostgreSQL을 사용하지 않으면 `-DLITEORM_WITH_POSTGRESQL=OFF`로 빌드합니다. libpq 개발 파일이 필요 없습니다.
 
-## 2. 모델 정의 및 CRUD
+## 2. 권장 객체 기반 API
+
+새 모델 등록과 CRUD는 [OBJECT_API.ko.md](OBJECT_API.ko.md)를 참고하세요.
+기존 Table/Column API는 계속 지원합니다.
+
+## 3. 기존 모델 정의 및 CRUD
 
 ```cpp
 #include "liteorm/liteorm.hpp"

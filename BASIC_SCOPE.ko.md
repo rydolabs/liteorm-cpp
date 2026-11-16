@@ -1,4 +1,4 @@
-# LiteORM-cpp C++11 — 기본 기능 중심 개발 범위 (v0.7-core)
+# LiteORM-cpp C++11 — 기본 기능 중심 개발 범위 (v0.8-core)
 
 ## 제품 목표
 

@@ -2,7 +2,27 @@
 
 Lightweight, C++11-compatible **code-first ORM** for **SQLite** and **PostgreSQL**.
 
-> Status: **0.7.0 migration preview** (originally TinyORM v0.7-core). Not yet production-ready. SQLite tests have been exercised; live PostgreSQL integration requires a running server.
+> Status: **0.8.0 object-first API preview**. C++11; not yet production-ready. PostgreSQL 17 live integration is tested via GitHub Actions.
+
+## Object-first API (v0.8 preview)
+
+```cpp
+liteorm::Database db("app.db");
+db.model<User>("users").primary_key("id", &User::id)
+    .field("name", &User::name).field("age", &User::age);
+auto users = db.repository<User>();
+users.create_table();
+User alice; alice.name = "Alice"; alice.age = 27;
+users.create(alice);             // populates generated alice.id
+auto found = users.find(alice.id); // Optional<User>
+auto adults = users.where(liteorm::col(&User::age) >= 18)
+    .order_by(&User::name).limit(10).all();
+users.update(alice);
+users.remove(alice.id);
+```
+
+Define User as a regular struct; no custom Table subclass or hand-written SQL is required.
+See [Object API guide](OBJECT_API.ko.md) and [Repository demo](examples/repository_main.cpp).
 
 ## Features
 
@@ -82,7 +102,7 @@ cmake --build consumer-build
 In your CMake project:
 
 ```cmake
-find_package(liteorm_cpp 0.7 CONFIG REQUIRED)
+find_package(liteorm_cpp 0.8 CONFIG REQUIRED)
 target_link_libraries(your_app PRIVATE liteorm::liteorm)
 ```
 
