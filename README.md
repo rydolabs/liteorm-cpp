@@ -7,7 +7,7 @@ Lightweight, C++11-compatible **code-first ORM** for **SQLite** and **PostgreSQL
 ## Object-first API (v0.8 preview)
 
 ```cpp
-liteorm::Database db("app.db");
+auto db = liteorm::Database::sqlite("app.db");
 db.model<User>("users").primary_key("id", &User::id)
     .field("name", &User::name).field("age", &User::age);
 auto users = db.repository<User>();
@@ -22,6 +22,19 @@ users.remove(alice.id);
 ```
 
 Define User as a regular struct; no custom Table subclass or hand-written SQL is required.
+For larger applications, register models once in a helper:
+
+```cpp
+void register_models(liteorm::Database& db) {
+    db.model<User>("users")
+      .primary_key("id", &User::id)
+      .field("name", &User::name)
+      .field("age", &User::age);
+}
+```
+
+After connecting, call `register_models(db)` and then `db.repository<User>()`.
+Do not move a `Database` after repositories, statements or transactions are created.
 See [Object API guide](OBJECT_API.ko.md) and [Repository demo](examples/repository_main.cpp).
 
 ## Database connections and runnable examples
@@ -31,8 +44,8 @@ Only Database construction differs between the two backends; the Repository API 
 **SQLite:**
 
 ```cpp
-liteorm::Database db("app.db");     // Persistent database file
-// liteorm::Database db(":memory:"); // In-memory database
+auto db = liteorm::Database::sqlite("app.db");     // Persistent database file
+// auto db = liteorm::Database::sqlite(":memory:"); // In-memory database
 ```
 
 **PostgreSQL:**
@@ -40,7 +53,7 @@ liteorm::Database db("app.db");     // Persistent database file
 ```cpp
 const char* dsn = std::getenv("LITEORM_PG_DSN");
 if (!dsn || !*dsn) throw std::runtime_error("LITEORM_PG_DSN not set");
-liteorm::Database db(dsn, liteorm::BackendKind::PostgreSQL);
+auto db = liteorm::Database::postgresql(dsn);
 ```
 
 Runnable C++11 examples: [SQLite](examples/sqlite_object_main.cpp) and
@@ -78,7 +91,11 @@ cmake --build build-sqlite -j 2
 ctest --test-dir build-sqlite --output-on-failure
 ```
 
-## Usage
+## Legacy Table/SQL API
+
+The original Table/SQL-style API is supported for compatibility. New projects
+should use the Object-first Repository API above.
+
 
 ```cpp
 #include <liteorm/liteorm.hpp>
@@ -113,7 +130,7 @@ int main() {
 }
 ```
 
-Use `liteorm::Database(conninfo, liteorm::BackendKind::PostgreSQL)` for PostgreSQL.
+Prefer `liteorm::Database::postgresql(conninfo)` for new code; the legacy constructor stays available.
 
 ## Install / consume
 

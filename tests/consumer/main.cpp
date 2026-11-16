@@ -15,7 +15,7 @@ struct Records : liteorm::Table<Record> {
         name(add("name", &Record::name)) {}
 };
 int main() {
-    liteorm::Database db(":memory:");
+    auto db = liteorm::Database::sqlite(":memory:");
     Records records;
     db.create_table(records);
     Record row;

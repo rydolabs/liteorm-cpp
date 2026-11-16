@@ -15,7 +15,7 @@ struct User {
 int main() {
     try {
         // File-based DB persists between executions. Use ":memory:" for ephemeral data.
-        liteorm::Database db("liteorm_demo.sqlite3");
+        auto db = liteorm::Database::sqlite("liteorm_demo.sqlite3");
 
         db.model<User>("liteorm_demo_users")
             .primary_key("id", &User::id)

@@ -7,8 +7,8 @@
 SQLite 개발 파일이 설치되어 있으면 별도의 DB 서버 없이 파일로 실행됩니다.
 
 ```cpp
-liteorm::Database db("app.db");    // 현재 작업 디렉터리에 파일 생성
-// liteorm::Database db(":memory:"); // 종료 시 삭제되는 메모리 DB
+auto db = liteorm::Database::sqlite("app.db");    // 현재 작업 디렉터리에 파일 생성
+// auto db = liteorm::Database::sqlite(":memory:"); // 종료 시 삭제되는 메모리 DB
 ```
 
 실행 가능한 소스: [examples/sqlite_object_main.cpp](examples/sqlite_object_main.cpp)
@@ -20,7 +20,7 @@ PostgreSQL 서버와 libpq 개발 패키지가 필요합니다. PostgreSQL 사�
 ```cpp
 const char* dsn = std::getenv("LITEORM_PG_DSN");
 if (!dsn || !*dsn) throw std::runtime_error("LITEORM_PG_DSN not set");
-liteorm::Database db(dsn, liteorm::BackendKind::PostgreSQL);
+auto db = liteorm::Database::postgresql(dsn);
 ```
 
 테스트용 DB 준비 후 실행:
@@ -32,6 +32,13 @@ export LITEORM_PG_DSN='host=127.0.0.1 port=5432 dbname=liteorm_demo user=postgre
 ```
 
 실행 가능한 소스: [examples/postgresql_object_main.cpp](examples/postgresql_object_main.cpp)
+
+기존 `Database("app.db")` 및 `Database(conninfo, BackendKind::PostgreSQL)`
+생성자도 하위 호환용으로 유지합니다. PostgreSQL 비활성화 빌드에서는
+`Database::postgresql()` 호출 시 예외가 발생합니다.
+
+팩토리는 C++11 이동 생성자를 통해 `Database` 객체를 반환합니다.
+Repository나 Transaction을 만든 **후에는 Database를 이동하지 마세요.**
 
 ## 공통 ORM API
 

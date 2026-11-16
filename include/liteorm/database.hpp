@@ -118,6 +118,14 @@ public:
     ~Database();
     Database(const Database&) = delete;
     Database& operator=(const Database&) = delete;
+    // C++11 factories return an owned Database by value.
+    // Move only before creating repositories, statements, or transactions.
+    Database(Database&& other) noexcept;
+    Database& operator=(Database&& other) = delete;
+
+    // Preferred explicit backend selection; legacy constructors remain available.
+    static Database sqlite(const std::string& filename);
+    static Database postgresql(const std::string& conninfo);
 
     SqlDialect dialect() const;
     BackendKind backend_kind() const;

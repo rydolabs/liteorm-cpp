@@ -21,7 +21,7 @@ int main() {
         return 2;
     }
     try {
-        liteorm::Database db(dsn, liteorm::BackendKind::PostgreSQL);
+        auto db = liteorm::Database::postgresql(dsn);
         db.model<User>("liteorm_demo_users")
             .primary_key("id", &User::id)
             .field("name", &User::name)

@@ -7,7 +7,7 @@ struct User {
     User():id(0),age(0){}
 };
 int main(){
-    liteorm::Database db(":memory:");
+    auto db = liteorm::Database::sqlite(":memory:");
     db.model<User>("users").primary_key("id",&User::id)
         .field("name",&User::name).field("age",&User::age);
     auto users=db.repository<User>();users.create_table();

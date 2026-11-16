@@ -1,5 +1,10 @@
 # v0.8 — Object-first Repository API
 
+- Added explicit `Database::sqlite(path)` and `Database::postgresql(conninfo)` factories.
+- Preserved constructor-based backend selection; Database now supports move construction.
+- Updated both backend examples, Repository demo, installed consumer test and connection docs.
+- Verified C++11 factory return with copy elision disabled and model registry after a move.
+
 - Added runnable SQLite and PostgreSQL Repository examples, a connection guide, and CI smoke runs.
 
 - Added model<T>() and repository<T>() for simple object CRUD.

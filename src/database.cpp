@@ -9,6 +9,14 @@ Database::Database(const std::string& connection, BackendKind kind)
               ? detail::open_sqlite(connection)
               : detail::open_postgresql(connection)) {}
 Database::~Database() {}
+Database::Database(Database&& other) noexcept
+    : driver_(std::move(other.driver_)), models_(std::move(other.models_)) {}
+Database Database::sqlite(const std::string& filename) {
+    return Database(filename, BackendKind::SQLite);
+}
+Database Database::postgresql(const std::string& conninfo) {
+    return Database(conninfo, BackendKind::PostgreSQL);
+}
 SqlDialect Database::dialect() const { return driver_->dialect(); }
 BackendKind Database::backend_kind() const {
     return dialect() == SqlDialect::SQLite ? BackendKind::SQLite : BackendKind::PostgreSQL;

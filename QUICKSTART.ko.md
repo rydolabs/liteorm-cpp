@@ -15,6 +15,19 @@ PostgreSQL을 사용하지 않으면 `-DLITEORM_WITH_POSTGRESQL=OFF`로 빌드�
 
 ## 2. 권장 객체 기반 API
 
+데이터베이스 선택은 팩토리 메서드로 명시합니다.
+
+```cpp
+auto sqlite = liteorm::Database::sqlite("app.db");
+// 또는:
+auto pg = liteorm::Database::postgresql(connectionString);
+```
+
+두 DB 모두 이후 `db.model<T>()` / `db.repository<T>()`는 동일합니다.
+자세한 실행 방법은 [SQLite·PostgreSQL 연결 가이드](DATABASE_CONNECTIONS.ko.md)를 참고하세요.
+
+
+
 새 모델 등록과 CRUD는 [OBJECT_API.ko.md](OBJECT_API.ko.md)를 참고하세요.
 기존 Table/Column API는 계속 지원합니다.
 
@@ -78,8 +91,8 @@ PostgreSQL에서는 `Database` 생성 줄만 바꿉니다. 사전 생성한 DB�
 
 ```cpp
 // libpq 사용이 활성화된 빌드
-// liteorm::Database db("host=127.0.0.1 port=5432 dbname=mydb user=myuser ...",
-//                      liteorm::BackendKind::PostgreSQL);
+// auto db = liteorm::Database::postgresql(
+ //    "host=127.0.0.1 port=5432 dbname=mydb user=myuser ...");
 ```
 
 `Table` 및 `Column` 객체는 이를 사용하는 쿼리 객체보다 오래 살아 있어야 합니다. `find()`는 `std::unique_ptr`을 반환하며, 행이 없으면 빈 포인터가 됩니다. `insert()`는 정수 기본 키의 값만 반환합니다. 모든 행을 수정/삭제하려면 `.all_rows()`를 명시해야 합니다.

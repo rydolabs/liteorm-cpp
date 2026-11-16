@@ -1,5 +1,12 @@
 # LiteORM-cpp Object-first API (C++11)
 
+Explicit connection factories:
+
+```cpp
+auto db = liteorm::Database::sqlite("app.db");
+// or: auto db = liteorm::Database::postgresql(conninfo);
+```
+
 Register a model once with db.model<T>(table).primary_key(...).field(...).
 Then obtain auto-provided db.repository<T>() and use create, find, find_by,
 find_all, update, remove, count and exists without writing SQL.
