@@ -30,3 +30,5 @@ Connection pool, change tracking and automatic schema diff are out of scope.
 SQLite/PostgreSQL 연결 및 실행 예제: [DATABASE_CONNECTIONS.ko.md](DATABASE_CONNECTIONS.ko.md)
 
 Registration chains are committed when the temporary ModelBuilder finishes successfully; invalid or unfinished mappings cannot be used and can be retried. See [v0.8.1 stability](STABILITY_V081.ko.md).
+
+`create()` 확정 반환형 및 기존 v0.8 호출부 변경: [CREATE_API_CONTRACT.ko.md](CREATE_API_CONTRACT.ko.md)

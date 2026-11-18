@@ -1,5 +1,9 @@
 # v0.8.1 — Object-first stability
 
+- Finalized `Repository<T>::create(T&)` returning `void`; added contract and migration guide.
+- Confirmed the old low-level `Database::insert(table, object)` still returns `std::int64_t`.
+- Added C++11 compile-time API checks and SQLite/PostgreSQL tests for manual string IDs and duplicate-insert exceptions.
+
 - Guard Repository/RepositoryQuery against Database destruction; reject moves while Object-first handles, Statements, or Transactions are alive.
 - Make Repository::create(T&) return void; generated integer IDs still populate T::id; manual string keys have no numeric sentinel.
 - Finalize model metadata only after the registration builder completes; reject failed/incomplete registrations and allow retry.

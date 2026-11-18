@@ -18,6 +18,10 @@ struct MoveProbe {
     std::string label;
     MoveProbe() : id(0) {}
 };
+struct ManualKey {
+    std::string id;
+    std::string name;
+};
 int main(int argc,char** argv) {
     bool pg=argc>1&&std::string(argv[1])=="--postgresql";
     const char* dsn=std::getenv("LITEORM_TEST_PG_DSN");
@@ -25,6 +29,14 @@ int main(int argc,char** argv) {
         const char* required=std::getenv("LITEORM_REQUIRE_PG");
         return required&&std::string(required)=="1"?1:77;
     }
+    static_assert(std::is_same<
+        decltype(std::declval<liteorm::Repository<User>&>().create(
+            std::declval<User&>())), void>::value,
+        "Repository::create(User&) must return void");
+    static_assert(std::is_same<
+        decltype(std::declval<liteorm::Repository<ManualKey>&>().create(
+            std::declval<ManualKey&>())), void>::value,
+        "Repository::create(ManualKey&) must return void");
     static_assert(!std::is_copy_constructible<liteorm::Database>::value,
                   "Database stays non-copyable");
     static_assert(std::is_move_constructible<liteorm::Database>::value,
@@ -79,6 +91,36 @@ int main(int argc,char** argv) {
         moved.execute_sql("DROP TABLE IF EXISTS "+liteorm::quote_ident(name));throw;
     }
     moved.execute_sql("DROP TABLE "+liteorm::quote_ident(name));
+
+    // The same create(T&) contract must hold for manually assigned string
+    // primary keys on both SQLite and live PostgreSQL.
+    const std::string manual_table = name + "_manual";
+    moved.model<ManualKey>(manual_table)
+        .primary_key("id", &ManualKey::id, false)
+        .field("name", &ManualKey::name);
+    auto manual = moved.repository<ManualKey>();
+    manual.create_table(false);
+    ManualKey first;
+    first.id = "account-one";
+    first.name = "first";
+    manual.create(first);
+    assert(first.id == "account-one");
+    assert(manual.find(std::string("account-one")).has_value());
+    assert(manual.count() == 1);
+
+    // Failure is signaled by an exception, never an ID sentinel.
+    ManualKey duplicate = first;
+    bool rejected_duplicate = false;
+    try {
+        manual.create(duplicate);
+    } catch (const std::exception&) {
+        rejected_duplicate = true;
+    }
+    assert(rejected_duplicate);
+    assert(manual.count() == 1);
+    assert(manual.remove(std::string("account-one")) == 1);
+    moved.execute_sql("DROP TABLE "+liteorm::quote_ident(manual_table));
+
     if(!pg) {
         liteorm::Database legacy(":memory:");
         assert(legacy.backend_kind()==liteorm::BackendKind::SQLite);

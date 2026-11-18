@@ -35,7 +35,13 @@ void register_models(liteorm::Database& db) {
 
 After connecting, call `register_models(db)` and then `db.repository<User>()`.
 Database moves now throw `std::logic_error` while Repository/RepositoryQuery, Statement or Transaction handles are alive. If a Database is destroyed, subsequent Repository operations throw instead of dereferencing a dangling pointer. Treat handles as Database-scoped; this protection is specific to the Object-first API and does not make concurrent access safe. See [v0.8.1 stability notes](STABILITY_V081.ko.md).
-See [Object API guide](OBJECT_API.ko.md) and [Repository demo](examples/repository_main.cpp).
+**`Repository<T>::create(T&)` returns `void` (finalized in v0.8.1).**
+Successful inserts fill generated integer keys on the input object; failed inserts throw.
+Migration from the earlier preview: replace `auto id = users.create(user)` with
+`users.create(user); auto id = user.id;`.
+The legacy `Database::insert(table, object)` return type is unchanged.
+See [create() API contract (Korean)](CREATE_API_CONTRACT.ko.md),
+[Object API guide](OBJECT_API.ko.md) and [Repository demo](examples/repository_main.cpp).
 
 ## Database connections and runnable examples
 

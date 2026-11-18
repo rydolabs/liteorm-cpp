@@ -15,3 +15,11 @@ DB가 파괴된 다음 Repository/RepositoryQuery를 사용하면 `std::logic_er
 ## 검증
 
 `sqlite_repository_safety` 테스트가 사용 중 이동, 파괴된 DB 접근, 부분 등록 실패 및 재등록, 수동 문자열 키를 검사합니다. PostgreSQL 17 실서버 테스트는 GitHub Actions에서 기존 통합 테스트와 함께 수행됩니다.
+
+
+## 확정된 API 계약
+
+`Repository<T>::create(T&)`는 **반환형 `void`로 확정**합니다.
+이전 v0.8 프리뷰의 반환값을 기대하는 코드는 변경해야 합니다.
+저수준 `Database::insert(table, object)`는 호환성을 위해 변경하지 않습니다.
+자세한 규칙과 마이그레이션: [CREATE_API_CONTRACT.ko.md](CREATE_API_CONTRACT.ko.md).
