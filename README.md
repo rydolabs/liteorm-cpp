@@ -2,9 +2,9 @@
 
 Lightweight, C++11-compatible **code-first ORM** for **SQLite** and **PostgreSQL**.
 
-> Status: **0.8.0 object-first API preview**. C++11; not yet production-ready. PostgreSQL 17 live integration is tested via GitHub Actions.
+> Status: **0.8.1 object-first API stability preview**. C++11; not yet production-ready. PostgreSQL 17 live integration is tested via GitHub Actions.
 
-## Object-first API (v0.8 preview)
+## Object-first API (v0.8.1 preview)
 
 ```cpp
 auto db = liteorm::Database::sqlite("app.db");
@@ -13,7 +13,7 @@ db.model<User>("users").primary_key("id", &User::id)
 auto users = db.repository<User>();
 users.create_table();
 User alice; alice.name = "Alice"; alice.age = 27;
-users.create(alice);             // populates generated alice.id
+users.create(alice);             // void; populates generated alice.id
 auto found = users.find(alice.id); // Optional<User>
 auto adults = users.where(liteorm::col(&User::age) >= 18)
     .order_by(&User::name).limit(10).all();
@@ -34,7 +34,7 @@ void register_models(liteorm::Database& db) {
 ```
 
 After connecting, call `register_models(db)` and then `db.repository<User>()`.
-Do not move a `Database` after repositories, statements or transactions are created.
+Database moves now throw `std::logic_error` while Repository/RepositoryQuery, Statement or Transaction handles are alive. If a Database is destroyed, subsequent Repository operations throw instead of dereferencing a dangling pointer. Treat handles as Database-scoped; this protection is specific to the Object-first API and does not make concurrent access safe. See [v0.8.1 stability notes](STABILITY_V081.ko.md).
 See [Object API guide](OBJECT_API.ko.md) and [Repository demo](examples/repository_main.cpp).
 
 ## Database connections and runnable examples

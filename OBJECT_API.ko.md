@@ -12,7 +12,7 @@ Then obtain auto-provided db.repository<T>() and use create, find, find_by,
 find_all, update, remove, count and exists without writing SQL.
 
 find(id) returns Optional<T>; an absent row has !has_value().
-create(T&) executes immediately and assigns generated integer primary keys.
+create(T&) returns void: it executes immediately, throws on failure, and updates generated integer primary keys on the object. Manually assigned string keys stay on the object; no ambiguous numeric return value.
 For manually assigned or string keys: primary_key("id", &T::id, false).
 update(const T&) rewrites all mapped non-key fields, without change tracking.
 remove(id) deletes by primary key and returns affected-row count.
@@ -28,3 +28,5 @@ Legacy Table/Column and SQL-oriented API remain supported, but are not the defau
 Connection pool, change tracking and automatic schema diff are out of scope.
 
 SQLite/PostgreSQL 연결 및 실행 예제: [DATABASE_CONNECTIONS.ko.md](DATABASE_CONNECTIONS.ko.md)
+
+Registration chains are committed when the temporary ModelBuilder finishes successfully; invalid or unfinished mappings cannot be used and can be retried. See [v0.8.1 stability](STABILITY_V081.ko.md).

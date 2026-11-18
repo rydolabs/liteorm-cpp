@@ -32,7 +32,11 @@ private:
     std::string sqlstate_;
 };
 
-namespace detail { class Backend; class ResultCursor; }
+namespace detail {
+class Backend; class ResultCursor;
+struct DatabaseLifetime { bool alive; DatabaseLifetime() : alive(true) {} };
+struct Registration { bool ready; bool failed; Registration() : ready(false), failed(false) {} };
+}
 class Database;
 
 // Cross-database result cursor; SQLite streams rows, libpq buffers a PGresult.
@@ -49,6 +53,7 @@ public:
     Value column(int index) const;
 private:
     std::unique_ptr<detail::ResultCursor> cursor_;
+    std::shared_ptr<detail::DatabaseLifetime> lifetime_;
 };
 
 class Transaction {
@@ -64,6 +69,7 @@ public:
 private:
     Database* db_;
     bool active_;
+    std::shared_ptr<detail::DatabaseLifetime> lifetime_;
 };
 
 template <typename Model> class ModelBuilder;
@@ -120,7 +126,7 @@ public:
     Database& operator=(const Database&) = delete;
     // C++11 factories return an owned Database by value.
     // Move only before creating repositories, statements, or transactions.
-    Database(Database&& other) noexcept;
+    Database(Database&& other); // Rejects a move while dependent handles exist
     Database& operator=(Database&& other) = delete;
 
     // Preferred explicit backend selection; legacy constructors remain available.
@@ -200,8 +206,12 @@ public:
 private:
     friend class Statement;
     friend class Transaction;
+    template <typename> friend class Repository;
+    template <typename> friend class RepositoryQuery;
     std::unique_ptr<detail::Backend> driver_;
     std::map<std::type_index, std::shared_ptr<void> > models_;
+    std::map<std::type_index, std::shared_ptr<detail::Registration> > model_status_;
+    std::shared_ptr<detail::DatabaseLifetime> lifetime_;
 };
 
 template <typename Model>

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(liteorm_cpp VERSION 0.8.0 LANGUAGES CXX)
+project(liteorm_cpp VERSION 0.8.1 LANGUAGES CXX)
 
 # Verify every target in a real -std=c++11 mode, not the compiler default.
 set(CMAKE_CXX_STANDARD 11)
@@ -108,6 +108,11 @@ add_executable(liteorm_core_safety_tests tests/test_core_safety.cpp)
 target_link_libraries(liteorm_core_safety_tests PRIVATE liteorm)
 add_executable(liteorm_portable_core_tests tests/test_portable_core.cpp)
 target_link_libraries(liteorm_portable_core_tests PRIVATE liteorm)
+add_executable(liteorm_repository_safety_tests tests/test_repository_safety.cpp)
+target_link_libraries(liteorm_repository_safety_tests PRIVATE liteorm)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(liteorm_repository_safety_tests PRIVATE -fno-elide-constructors)
+endif()
 add_executable(liteorm_repository_tests tests/test_repository.cpp)
 target_link_libraries(liteorm_repository_tests PRIVATE liteorm)
 # C++11 must not require optional copy elision for factory-returned Database.
@@ -135,7 +140,7 @@ if(LITEORM_WITH_POSTGRESQL)
 endif()
 
 # Tests rely on assert(); keep assertions enabled in Release builds, too.
-foreach(test_target liteorm_repository_tests liteorm_core_basics_tests liteorm_core_safety_tests liteorm_portable_core_tests liteorm_tests liteorm_join_tests liteorm_dialect_tests liteorm_relation_tests liteorm_migration_tests liteorm_migration_concurrency_tests)
+foreach(test_target liteorm_repository_safety_tests liteorm_repository_tests liteorm_core_basics_tests liteorm_core_safety_tests liteorm_portable_core_tests liteorm_tests liteorm_join_tests liteorm_dialect_tests liteorm_relation_tests liteorm_migration_tests liteorm_migration_concurrency_tests)
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         target_compile_options(${test_target} PRIVATE -UNDEBUG)
     endif()
@@ -146,6 +151,7 @@ if(LITEORM_WITH_POSTGRESQL AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 enable_testing()
+add_test(NAME sqlite_repository_safety COMMAND liteorm_repository_safety_tests)
 add_test(NAME sqlite_repository COMMAND liteorm_repository_tests)
 add_test(NAME sqlite_migration_concurrency COMMAND liteorm_migration_concurrency_tests)
 add_test(NAME sqlite_migration_integration COMMAND liteorm_migration_tests)
