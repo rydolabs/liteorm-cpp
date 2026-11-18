@@ -42,6 +42,10 @@ jobs:
         run: cmake --build build -j 2
       - name: Integration tests (SQLite + live PostgreSQL)
         run: ctest --test-dir build --output-on-failure --output-junit ctest-results.xml
+      - name: Run object-first SQLite and PostgreSQL examples
+        run: |
+          ./build/liteorm_sqlite_object_example
+          LITEORM_PG_DSN="$LITEORM_TEST_PG_DSN" ./build/liteorm_postgresql_object_example
       - name: Confirm all PostgreSQL tests actually executed
         run: |
           python3 - <<'PYTEST'
@@ -49,8 +53,8 @@ jobs:
           root = ET.parse('build/ctest-results.xml').getroot()
           tests = [e for e in root.iter('testcase')
                    if e.attrib.get('name', '').startswith('postgresql_')]
-          if len(tests) != 5:
-              raise SystemExit('Expected 5 PostgreSQL test cases; found %d' % len(tests))
+          if len(tests) != 6:
+              raise SystemExit('Expected 6 PostgreSQL test cases; found %d' % len(tests))
           skipped = [e.attrib['name'] for e in tests if e.find('skipped') is not None]
           if skipped:
               raise SystemExit('PostgreSQL tests skipped: ' + ', '.join(skipped))
@@ -79,6 +83,8 @@ jobs:
         run: |
           cmake --build build-sqlite -j 2
           ctest --test-dir build-sqlite --output-on-failure
+      - name: Run SQLite object-first example
+        run: ./build-sqlite/liteorm_sqlite_object_example
       - name: Install and consume SQLite-only build
         run: |
           cmake --install build-sqlite --prefix "$PWD/stage-sqlite"

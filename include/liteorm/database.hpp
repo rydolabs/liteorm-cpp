@@ -4,6 +4,7 @@
 #include "liteorm/core.hpp"
 #include <map>
 #include <memory>
+#include <typeindex>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -31,7 +32,11 @@ private:
     std::string sqlstate_;
 };
 
-namespace detail { class Backend; class ResultCursor; }
+namespace detail {
+class Backend; class ResultCursor;
+struct DatabaseLifetime { bool alive; DatabaseLifetime() : alive(true) {} };
+struct Registration { bool ready; bool failed; Registration() : ready(false), failed(false) {} };
+}
 class Database;
 
 // Cross-database result cursor; SQLite streams rows, libpq buffers a PGresult.
@@ -48,6 +53,7 @@ public:
     Value column(int index) const;
 private:
     std::unique_ptr<detail::ResultCursor> cursor_;
+    std::shared_ptr<detail::DatabaseLifetime> lifetime_;
 };
 
 class Transaction {
@@ -63,8 +69,13 @@ public:
 private:
     Database* db_;
     bool active_;
+    std::shared_ptr<detail::DatabaseLifetime> lifetime_;
 };
 
+template <typename Model> class ModelBuilder;
+template <typename Model> class Repository;
+template <typename Model> class RepositoryQuery;
+template <typename Model> class Predicate;
 template <typename Model> class BoundSelect;
 template <typename Model> class BoundUpdate;
 template <typename Model> class BoundDelete;
@@ -113,6 +124,14 @@ public:
     ~Database();
     Database(const Database&) = delete;
     Database& operator=(const Database&) = delete;
+    // C++11 factories return an owned Database by value.
+    // Move only before creating repositories, statements, or transactions.
+    Database(Database&& other); // Rejects a move while dependent handles exist
+    Database& operator=(Database&& other) = delete;
+
+    // Preferred explicit backend selection; legacy constructors remain available.
+    static Database sqlite(const std::string& filename);
+    static Database postgresql(const std::string& conninfo);
 
     SqlDialect dialect() const;
     BackendKind backend_kind() const;
@@ -151,6 +170,11 @@ public:
     }
 
     template <typename Model>
+    ModelBuilder<Model> model(const std::string& table_name);
+    template <typename Model>
+    Repository<Model> repository();
+
+    template <typename Model>
     BoundSelect<Model> select(const Table<Model>& table);
     template <typename Model>
     BoundUpdate<Model> update(const Table<Model>& table);
@@ -182,7 +206,12 @@ public:
 private:
     friend class Statement;
     friend class Transaction;
+    template <typename> friend class Repository;
+    template <typename> friend class RepositoryQuery;
     std::unique_ptr<detail::Backend> driver_;
+    std::map<std::type_index, std::shared_ptr<void> > models_;
+    std::map<std::type_index, std::shared_ptr<detail::Registration> > model_status_;
+    std::shared_ptr<detail::DatabaseLifetime> lifetime_;
 };
 
 template <typename Model>
@@ -539,4 +568,6 @@ template <typename Model>
 BoundDelete<Model> Database::remove(const Table<Model>& t) { return BoundDelete<Model>(*this, t); }
 
 } // namespace liteorm
+
+#include "liteorm/repository.hpp"
 #endif

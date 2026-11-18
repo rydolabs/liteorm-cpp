@@ -15,7 +15,7 @@ struct Records : liteorm::Table<Record> {
         name(add("name", &Record::name)) {}
 };
 int main() {
-    liteorm::Database db(":memory:");
+    auto db = liteorm::Database::sqlite(":memory:");
     Records records;
     db.create_table(records);
     Record row;
@@ -24,4 +24,12 @@ int main() {
     assert(id > 0);
     assert(db.find(records, records.id, id)->name == row.name);
     assert(db.select(records).count() == 1);
+    struct Item { std::int64_t id; std::string name; Item():id(0){} };
+    db.model<Item>("installed_items").primary_key("id",&Item::id).field("name",&Item::name);
+    auto items=db.repository<Item>();
+    items.create_table();
+    Item item;item.name="installed";items.create(item);
+    assert(item.id>0 && items.find(item.id).has_value());
+    assert(items.find_by(&Item::name,"installed").size()==1);
+    assert(items.remove(item.id)==1);
 }

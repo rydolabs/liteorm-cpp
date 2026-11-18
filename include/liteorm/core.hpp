@@ -428,12 +428,14 @@ public:
         : FieldBinding<Model>(info), member_(member) {}
     Value extract(const Model& m) const { return ValueCodec<Field>::encode(m.*member_); }
     void assign(Model& m, const Value& v) const { m.*member_ = ValueCodec<Field>::decode(v); }
+    bool matches(Field Model::* candidate) const { return member_ == candidate; }
 private:
     Field Model::* member_;
 };
 
 template <typename Model>
 class Table {
+    template <typename> friend class ModelBuilder;
 public:
     explicit Table(const std::string& name) : name_(name), primary_index_(-1) {
         quote_ident(name_); // validate as soon as registered
@@ -450,6 +452,17 @@ public:
         fields_.at(i)->assign(value, field);
     }
     template <typename Field>
+    Column<Model, Field> column(Field Model::* member) const {
+        if (!member) throw std::invalid_argument("null model member pointer");
+        for (std::size_t i = 0; i < fields_.size(); ++i) {
+            const MemberBinding<Model, Field>* binding =
+                dynamic_cast<const MemberBinding<Model, Field>*>(fields_[i].get());
+            if (binding && binding->matches(member))
+                return Column<Model, Field>(this, name_, info(i).name, member, i);
+        }
+        throw std::invalid_argument("member is not registered in this model");
+    }
+    template <typename Field>
     void validate(const Column<Model, Field>& column) const {
         if (column.owner() != this || column.index() >= fields_.size() ||
             fields_[column.index()]->info().name != column.name())
@@ -461,8 +474,14 @@ protected:
                              ColumnOptions opts = ColumnOptions()) {
         quote_ident(name);
         if (!member) throw std::invalid_argument("null model member pointer");
-        for (std::size_t i = 0; i < fields_.size(); ++i)
-            if (fields_[i]->info().name == name) throw std::invalid_argument("duplicate column");
+        for (std::size_t i = 0; i < fields_.size(); ++i) {
+            if (fields_[i]->info().name == name)
+                throw std::invalid_argument("duplicate column");
+            const MemberBinding<Model,Field>* prev =
+                dynamic_cast<const MemberBinding<Model,Field>*>(fields_[i].get());
+            if (prev && prev->matches(member))
+                throw std::invalid_argument("C++ member already mapped");
+        }
         if (opts.primary_key && primary_index_ >= 0)
             throw std::invalid_argument("only one primary key supported in v0.1");
         if (opts.generated && (!opts.primary_key || !ValueCodec<Field>::identity_compatible()))

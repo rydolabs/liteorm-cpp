@@ -17,3 +17,15 @@ The migration keeps ORM behavior and C++11 support unchanged; naming and packagi
 **API scope:** CRUD, typed queries, joins, explicit migrations and RAII transactions. No new connection pool, session or automatic schema-diff functionality is introduced.
 
 **Deployment:** a project previously linked against a compiled `tinyorm` binary must rebuild after this rename; only source-level compatibility is offered, *not* a guarantee of binary/ABI compatibility. SQL database schema and migration history table names have not been changed.
+
+## Object-first API: v0.8 preview to v0.8.1
+
+`Repository<T>::create(T&)` is finalized with a `void` return type.
+Call `users.create(user);` and read the generated integer key from `user.id`.
+On insertion failure an exception is thrown, not an ID sentinel.
+Manual string/integer keys are provided on the object before calling create().
+The old `auto id = users.create(user)` code must be updated.
+The low-level `Database::insert(table, object)` retains its existing
+`std::int64_t` return type for compatibility.
+
+See [CREATE_API_CONTRACT.ko.md](CREATE_API_CONTRACT.ko.md).

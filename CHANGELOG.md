@@ -1,3 +1,34 @@
+# v0.8.1 — Object-first stability
+
+- Finalized `Repository<T>::create(T&)` returning `void`; added contract and migration guide.
+- Confirmed the old low-level `Database::insert(table, object)` still returns `std::int64_t`.
+- Added C++11 compile-time API checks and SQLite/PostgreSQL tests for manual string IDs and duplicate-insert exceptions.
+
+- Guard Repository/RepositoryQuery against Database destruction; reject moves while Object-first handles, Statements, or Transactions are alive.
+- Make Repository::create(T&) return void; generated integer IDs still populate T::id; manual string keys have no numeric sentinel.
+- Finalize model metadata only after the registration builder completes; reject failed/incomplete registrations and allow retry.
+- Add SQLite safety regressions in GCC/Clang and SQLite-only CI; preserve legacy query API.
+
+---
+
+# v0.8 — Object-first Repository API
+
+- Added explicit `Database::sqlite(path)` and `Database::postgresql(conninfo)` factories.
+- Preserved constructor-based backend selection; Database now supports move construction.
+- Updated both backend examples, Repository demo, installed consumer test and connection docs.
+- Verified C++11 factory return with copy elision disabled and model registry after a move.
+
+- Added runnable SQLite and PostgreSQL Repository examples, a connection guide, and CI smoke runs.
+
+- Added model<T>() and repository<T>() for simple object CRUD.
+- Added typed col(&T::field) predicates and chained queries.
+- Generated integer primary keys are copied back into inserted objects.
+- Preserved legacy Table/Column/SQL APIs and C++11 compatibility.
+- Added SQLite and PostgreSQL 17 repository integration coverage and demo.
+- No pool, change tracking, automatic schema diff, or asynchronous API.
+
+---
+
 # v0.7-core — 기본 CRUD 호환성·문서·회귀 테스트 강화
 
 - 프로젝트명 **LiteORM-cpp** 유지; CMake 패키지 버전을 **0.7.0**으로 갱신. C++11 유지.
